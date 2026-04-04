@@ -19,7 +19,9 @@ Chromium's Clang tarball layout differs from standard LLVM releases:
 - Several tools missing (clang-cpp, llvm-profdata, llvm-cov, etc.)
 
 This rule patches the download by creating stub scripts for missing
-tools and an empty include/c++/v1/ directory.
+tools and an empty include/c++/v1/ directory. When coverage tool URLs
+are provided, llvm-cov and llvm-profdata are downloaded from Chromium's
+separate llvm-code-coverage package instead of being stubbed.
 """
 
 _STUB_TOOLS = [
@@ -43,6 +45,14 @@ def _chromium_clang_impl(rctx):
         sha256 = rctx.attr.sha256,
         stripPrefix = rctx.attr.strip_prefix,
     )
+
+    # Download coverage tools (llvm-cov, llvm-profdata) if URLs are provided.
+    # These overlay into bin/, replacing what would otherwise be stub scripts.
+    if rctx.attr.coverage_tools_urls:
+        rctx.download_and_extract(
+            url = rctx.attr.coverage_tools_urls,
+            sha256 = rctx.attr.coverage_tools_sha256,
+        )
 
     rctx.file("include/c++/v1/.keep", "")
 
@@ -74,5 +84,7 @@ chromium_clang = repository_rule(
         "urls": attr.string_list(mandatory = True),
         "sha256": attr.string(default = ""),
         "strip_prefix": attr.string(default = ""),
+        "coverage_tools_urls": attr.string_list(default = [], doc = "URLs for the llvm-code-coverage package (llvm-cov + llvm-profdata)."),
+        "coverage_tools_sha256": attr.string(default = "", doc = "SHA256 of the coverage tools tarball."),
     },
 )

@@ -25,6 +25,8 @@ load(
     "//:defaults.bzl",
     "CLANG_SHA256",
     "CLANG_URLS",
+    "COVERAGE_TOOLS_SHA256",
+    "COVERAGE_TOOLS_URLS",
     "LLVM_MAJOR_VERSION",
     "SYSROOT_SHA256",
     "SYSROOT_URLS",
@@ -56,10 +58,20 @@ def _chromium_impl(module_ctx):
             clang_urls = tag.clang_urls if tag.clang_urls else CLANG_URLS.get("linux-x86_64", [])
             clang_sha256 = tag.clang_sha256 if tag.clang_sha256 else CLANG_SHA256.get("linux-x86_64", "")
 
+            # Coverage tools (llvm-cov + llvm-profdata).
+            if tag.coverage_tools:
+                coverage_urls = tag.coverage_tools_urls if tag.coverage_tools_urls else COVERAGE_TOOLS_URLS.get("linux-x86_64", [])
+                coverage_sha256 = tag.coverage_tools_sha256 if tag.coverage_tools_sha256 else COVERAGE_TOOLS_SHA256.get("linux-x86_64", "")
+            else:
+                coverage_urls = []
+                coverage_sha256 = ""
+
             chromium_clang(
                 name = clang_name,
                 urls = clang_urls,
                 sha256 = clang_sha256,
+                coverage_tools_urls = coverage_urls,
+                coverage_tools_sha256 = coverage_sha256,
             )
 
             # Download sysroots for each target.
@@ -106,6 +118,16 @@ chromium = module_extension(
                 ),
                 "clang_sha256": attr.string(
                     doc = "Override Clang tarball sha256.",
+                ),
+                "coverage_tools": attr.bool(
+                    default = True,
+                    doc = "Download llvm-cov and llvm-profdata for hermetic coverage.",
+                ),
+                "coverage_tools_urls": attr.string_list(
+                    doc = "Override coverage tools download URLs (must match Clang version).",
+                ),
+                "coverage_tools_sha256": attr.string(
+                    doc = "Override coverage tools tarball sha256.",
                 ),
             },
         ),

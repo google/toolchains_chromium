@@ -2817,7 +2817,7 @@
     },
     "@@toolchains_chromium+//:extensions.bzl%chromium": {
       "general": {
-        "bzlTransitiveDigest": "c9VK6HIcMIXS6uZ5oJTBctclrQfzpHjWlab4GAxPaVE=",
+        "bzlTransitiveDigest": "QQuNPJQaVJLNa6o3yRtNf45OBV/KELs5B3h6v5EM5Mc=",
         "usagesDigest": "cS0TQT2UWf6Kevb1/yjBgfx1XjiPJjWeDBGhS/Jm698=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -2829,7 +2829,11 @@
               "urls": [
                 "https://commondatastorage.googleapis.com/chromium-browser-clang/Linux_x64/clang-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz"
               ],
-              "sha256": "750b331006635281d7d90696629f67db748ba62004c46675eccb8af144141847"
+              "sha256": "750b331006635281d7d90696629f67db748ba62004c46675eccb8af144141847",
+              "coverage_tools_urls": [
+                "https://commondatastorage.googleapis.com/chromium-browser-clang/Linux_x64/llvm-code-coverage-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz"
+              ],
+              "coverage_tools_sha256": "8dcd816a83361b7924093ccba92dfe6bd29af2cf8af58bf7ce785b38c5027a8b"
             }
           },
           "chromium_toolchain_sysroot_linux_x86_64": {

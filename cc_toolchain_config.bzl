@@ -55,6 +55,10 @@ def _impl(ctx):
     all_compile = ACTION_NAME_GROUPS.all_cc_compile_actions
     all_link = ACTION_NAME_GROUPS.all_cc_link_actions
 
+    # C/C++ compile actions only (excludes assemble/preprocess-assemble).
+    # Used for coverage flags that are meaningless for assembly.
+    cc_compile = ACTION_NAME_GROUPS.all_cpp_compile_actions + [ACTION_NAMES.c_compile]
+
     # Clang finds its resource dir (builtins like stddef.h, sanitizer
     # runtimes) relative to the binary. Since we symlink the binary into
     # a different repo, we must tell Clang explicitly where its resources
@@ -163,6 +167,26 @@ def _impl(ctx):
         feature(name = "fastbuild"),
         feature(name = "supports_pic", enabled = True),
         feature(name = "supports_dynamic_linker", enabled = True),
+        feature(name = "coverage"),
+        feature(
+            name = "llvm_coverage_map_format",
+            provides = ["profile"],
+            flag_sets = [
+                flag_set(
+                    actions = cc_compile,
+                    flag_groups = [flag_group(flags = [
+                        "-fprofile-instr-generate",
+                        "-fcoverage-mapping",
+                    ])],
+                ),
+                flag_set(
+                    actions = all_link,
+                    flag_groups = [flag_group(flags = [
+                        "-fprofile-instr-generate",
+                    ])],
+                ),
+            ],
+        ),
         feature(
             name = "user_compile_flags",
             enabled = True,

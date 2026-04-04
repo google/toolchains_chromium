@@ -112,6 +112,14 @@ def chromium_toolchain_targets(clang_label, sysroots, targets, llvm_version):
             srcs = local_tools + [clang_label + "//:strip"],
         )
 
+        native.filegroup(
+            name = "coverage_files_" + suffix,
+            srcs = local_tools + [
+                clang_label + "//:clang",
+                clang_label + "//:coverage_tools",
+            ],
+        )
+
         cc_toolchain(
             name = "cc_toolchain_" + suffix,
             toolchain_config = ":config_" + suffix,
@@ -123,6 +131,7 @@ def chromium_toolchain_targets(clang_label, sysroots, targets, llvm_version):
             dwp_files = ":dwp_files_" + suffix,
             objcopy_files = ":objcopy_files_" + suffix,
             strip_files = ":strip_files_" + suffix,
+            coverage_files = ":coverage_files_" + suffix,
         )
 
         native.toolchain(

@@ -41,6 +41,15 @@ CLANG_SHA256 = {
     "linux-x86_64": "750b331006635281d7d90696629f67db748ba62004c46675eccb8af144141847",
 }
 
+# Coverage tools (llvm-cov + llvm-profdata) shipped as a separate package.
+COVERAGE_TOOLS_URLS = {
+    "linux-x86_64": ["%s/Linux_x64/llvm-code-coverage-%s.tar.xz" % (_CLANG_BASE_URL, CLANG_VERSION)],
+}
+
+COVERAGE_TOOLS_SHA256 = {
+    "linux-x86_64": "8dcd816a83361b7924093ccba92dfe6bd29af2cf8af58bf7ce785b38c5027a8b",
+}
+
 # GCS base URL for Chromium Linux sysroots.
 _SYSROOT_BASE_URL = "https://commondatastorage.googleapis.com/chrome-linux-sysroot"
 

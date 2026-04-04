@@ -1,3 +1,9 @@
 test --test_output=errors
 test --keep_going
 build --symlink_prefix=/
+
+# LLVM coverage using hermetic Chromium Clang toolchain
+coverage --repo_env=BAZEL_USE_LLVM_NATIVE_COVERAGE=1
+coverage --experimental_use_llvm_covmap
+coverage --experimental_generate_llvm_lcov
+coverage --combined_report=lcov
