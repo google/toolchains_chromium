@@ -7,13 +7,8 @@ coverage:
     #!/usr/bin/env bash
     set -euo pipefail
     cd test
-    output=$(bazel coverage //... 2>&1)
-    echo "$output"
-    report=$(echo "$output" | grep -oP 'LCOV coverage report is located at \K\S+')
-    if [ -z "$report" ]; then
-        echo "FAIL: no LCOV report path in output"
-        exit 1
-    fi
+    bazel coverage //...
+    report="$(bazel info output_path)/_coverage/_coverage_report.dat"
     bazel run :check_coverage -- "$report" "$PWD/coverage_lib.cc"
 
 # Run all checks
