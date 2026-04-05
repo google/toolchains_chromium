@@ -13,6 +13,7 @@
 # limitations under the License.
 
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+load("@rules_python//python:defs.bzl", "py_binary")
 load("@rules_shell//shell:sh_test.bzl", "sh_test")
 
 cc_test(
@@ -57,6 +58,23 @@ cc_binary(
     name = "shared_lib.so",
     srcs = ["shared_lib.cc"],
     linkshared = True,
+)
+
+cc_library(
+    name = "coverage_lib",
+    srcs = ["coverage_lib.cc"],
+    hdrs = ["coverage_lib.h"],
+)
+
+cc_test(
+    name = "coverage_test",
+    srcs = ["coverage_test.cc"],
+    deps = [":coverage_lib"],
+)
+
+py_binary(
+    name = "check_coverage",
+    srcs = ["check_coverage.py"],
 )
 
 cc_binary(

@@ -14,13 +14,7 @@ coverage:
         echo "FAIL: no LCOV report path in output"
         exit 1
     fi
-    lh=$(grep -c '^LH:[1-9]' "$report" || true)
-    if [ "$lh" -eq 0 ]; then
-        echo "FAIL: LCOV report has no non-zero line hits"
-        head -40 "$report"
-        exit 1
-    fi
-    echo "PASS: LCOV report has $lh source files with coverage data"
+    bazel run :check_coverage -- "$report" "$PWD/coverage_lib.cc"
 
 # Run all checks
 test-all: test coverage
