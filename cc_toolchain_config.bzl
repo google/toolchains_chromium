@@ -41,7 +41,12 @@ TOOL_PATHS = [
     ("objcopy", "bin/llvm-objcopy"),
     ("objdump", "bin/llvm-objdump"),
     ("strip", "bin/llvm-strip"),
+    # Bazel 8's collect_cc_coverage.sh uses COVERAGE_GCOV_PATH (from "gcov")
+    # for llvm-profdata merge, so this must point to llvm-profdata, not
+    # llvm-cov. Bazel 9+ uses the dedicated "llvm-profdata" tool path instead:
+    # https://github.com/bazelbuild/bazel/commit/9b32dd2fd384bc8adefd39595f897e99c024a25f
     ("gcov", "bin/llvm-profdata"),
+    ("llvm-profdata", "bin/llvm-profdata"),
     ("llvm-cov", "bin/llvm-cov"),
     ("dwp", "bin/llvm-dwp"),
 ]
