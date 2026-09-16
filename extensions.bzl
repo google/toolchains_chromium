@@ -46,10 +46,12 @@ def _chromium_impl(module_ctx):
     ext_prefix = module_name + "++chromium+"
 
     for mod in module_ctx.modules:
-        if not mod.is_root:
-            fail("Only the root module can use the 'chromium' extension")
-
         for tag in mod.tags.toolchain:
+            if not module_ctx.is_dev_dependency(tag):
+                fail(
+                    "The 'chromium' extension in module '%s' must be used with " % mod.name +
+                    "'dev_dependency = True' on both 'use_extension' and 'register_toolchains'.",
+                )
             name = tag.name
             targets = tag.targets if tag.targets else ["linux-x86_64"]
 
