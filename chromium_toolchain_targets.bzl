@@ -26,7 +26,7 @@ _TARGET_INFO = {
     ),
 }
 
-def chromium_toolchain_targets(clang_label, sysroots, targets, llvm_version):
+def chromium_toolchain_targets(clang_label, sysroots, targets, llvm_version, libcxx_label = ""):
     """Generates cc_toolchain and toolchain targets for each platform.
 
     Args:
@@ -34,8 +34,38 @@ def chromium_toolchain_targets(clang_label, sysroots, targets, llvm_version):
         sysroots: Dict of target key to canonical sysroot label string.
         targets: List of target platform keys (e.g. ["linux-x86_64"]).
         llvm_version: LLVM major version string.
+        libcxx_label: Canonical label prefix for the libc++ sources repo
+            (e.g. "@@repo", see libcxx/libcxx_sources.bzl), or "" to use the
+            sysroot's libstdc++.
     """
     local_tools = native.glob(["bin/*"])
+
+    if libcxx_label:
+        libcxx_base = libcxx_label.removeprefix("@@")
+        libcxx_include_directories = [
+            "external/{}/libcxx/include".format(libcxx_base),
+            "external/{}/libcxxabi/include".format(libcxx_base),
+        ]
+        libcxx_headers = [libcxx_label + "//:headers"]
+
+        # The runtime is built by this very toolchain in the bootstrap
+        # configuration (see libcxx/bootstrap.bzl), in which the toolchain
+        # must declare no runtime: otherwise the analysis graph has a cycle
+        # (toolchain -> runtime -> toolchain).
+        runtime_libs = {
+            "static_runtime_lib": select({
+                Label("//libcxx:bootstrap_on"): Label("//libcxx:empty"),
+                "//conditions:default": libcxx_label + "//:static_runtime",
+            }),
+            "dynamic_runtime_lib": select({
+                Label("//libcxx:bootstrap_on"): Label("//libcxx:empty"),
+                "//conditions:default": libcxx_label + "//:dynamic_runtime",
+            }),
+        }
+    else:
+        libcxx_include_directories = []
+        libcxx_headers = []
+        runtime_libs = {}
 
     for target_key in targets:
         info = _TARGET_INFO[target_key]
@@ -50,11 +80,13 @@ def chromium_toolchain_targets(clang_label, sysroots, targets, llvm_version):
             toolchain_identifier = "chromium_clang_" + suffix,
             sysroot_path = "external/{}/sysroot".format(sysroots[target_key].removeprefix("@@").split("//")[0]),
             resource_dir = "external/{}/lib/clang/{}".format(clang_base, llvm_version),
-            cxx_builtin_include_directories = [
+            cxx_builtin_include_directories = libcxx_include_directories + [
                 "external/{}/lib/clang/{}/include".format(clang_base, llvm_version),
                 "%sysroot%/usr/include",
                 "%sysroot%/usr/include/" + arch_triple,
             ],
+            stdlib = "libc++" if libcxx_label else "libstdc++",
+            libcxx_include_directories = libcxx_include_directories,
         )
 
         native.filegroup(
@@ -64,7 +96,7 @@ def chromium_toolchain_targets(clang_label, sysroots, targets, llvm_version):
                 clang_label + "//:include",
                 clang_label + "//:lib",
                 sysroots[target_key],
-            ],
+            ] + libcxx_headers,
         )
 
         native.filegroup(
@@ -73,7 +105,7 @@ def chromium_toolchain_targets(clang_label, sysroots, targets, llvm_version):
                 clang_label + "//:clang",
                 clang_label + "//:include",
                 sysroots[target_key],
-            ],
+            ] + libcxx_headers,
         )
 
         native.filegroup(
@@ -132,6 +164,7 @@ def chromium_toolchain_targets(clang_label, sysroots, targets, llvm_version):
             objcopy_files = ":objcopy_files_" + suffix,
             strip_files = ":strip_files_" + suffix,
             coverage_files = ":coverage_files_" + suffix,
+            **runtime_libs
         )
 
         native.toolchain(

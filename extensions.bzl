@@ -27,10 +27,13 @@ load(
     "CLANG_URLS",
     "COVERAGE_TOOLS_SHA256",
     "COVERAGE_TOOLS_URLS",
+    "LIBCXX_SOURCE_SHA256",
+    "LIBCXX_SOURCE_URLS",
     "LLVM_MAJOR_VERSION",
     "SYSROOT_SHA256",
     "SYSROOT_URLS",
 )
+load("//libcxx:libcxx_sources.bzl", "libcxx_sources")
 
 def _chromium_impl(module_ctx):
     # Canonical repo name for this module, used so generated BUILD files
@@ -93,6 +96,19 @@ def _chromium_impl(module_ctx):
                 )
                 sysroot_repos[target] = ext_prefix + sysroot_name
 
+            # libc++ is built from source (libcxx/); the sysroot's libstdc++
+            # is the alternative.
+            libcxx_repo = ""
+            if tag.stdlib == "libc++":
+                libcxx_name = name + "_libcxx"
+                libcxx_sources(
+                    name = libcxx_name,
+                    urls = LIBCXX_SOURCE_URLS | tag.libcxx_source_urls,
+                    sha256 = LIBCXX_SOURCE_SHA256 | tag.libcxx_source_sha256,
+                    toolchains_chromium_repo = this_repo,
+                )
+                libcxx_repo = ext_prefix + libcxx_name
+
             # Generate cc_toolchain + toolchain() targets.
             chromium_toolchain(
                 name = name,
@@ -100,6 +116,7 @@ def _chromium_impl(module_ctx):
                 sysroots = sysroot_repos,
                 targets = targets,
                 llvm_version = LLVM_MAJOR_VERSION,
+                libcxx_repo = libcxx_repo,
                 toolchains_chromium_repo = this_repo,
             )
 
@@ -130,6 +147,17 @@ chromium = module_extension(
                 ),
                 "coverage_tools_sha256": attr.string(
                     doc = "Override coverage tools tarball sha256.",
+                ),
+                "stdlib": attr.string(
+                    default = "libc++",
+                    values = ["libc++", "libstdc++"],
+                    doc = "C++ standard library: libc++ built from source (default) or the sysroot's libstdc++.",
+                ),
+                "libcxx_source_urls": attr.string_list_dict(
+                    doc = "Override libc++ source archive URLs, keyed like LIBCXX_SOURCE_URLS in defaults.bzl.",
+                ),
+                "libcxx_source_sha256": attr.string_dict(
+                    doc = "Override libc++ source archive content pins, keyed like LIBCXX_SOURCE_SHA256 in defaults.bzl.",
                 ),
             },
         ),

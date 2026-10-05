@@ -365,7 +365,7 @@
     },
     "@@toolchains_chromium+//:extensions.bzl%chromium": {
       "general": {
-        "bzlTransitiveDigest": "ReYeakcHVhb9JZsOnyhRDV+AxH0z7rbMxtDI55jKnXs=",
+        "bzlTransitiveDigest": "h5f5VkMQGQ5ramU3x3OWhzjyrQ0mKkITgfpOrLWGUaQ=",
         "usagesDigest": "tskEwj+ioFVTje+r1gMG56dVsQM+MOD94d/UotGMA/E=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -393,6 +393,52 @@
               "sha256": "52d61d4446ffebfaa3dda2cd02da4ab4876ff237853f46d273e7f9b666652e1d"
             }
           },
+          "chromium_toolchain_libcxx": {
+            "repoRuleId": "@@toolchains_chromium+//libcxx:libcxx_sources.bzl%libcxx_sources",
+            "attributes": {
+              "urls": {
+                "libcxx/include": [
+                  "https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx.git/+archive/97b436da4c33663581d394f4ee0a5977fc38c2f4/include.tar.gz"
+                ],
+                "libcxx/src": [
+                  "https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx.git/+archive/97b436da4c33663581d394f4ee0a5977fc38c2f4/src.tar.gz"
+                ],
+                "libcxx/vendor/llvm": [
+                  "https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx.git/+archive/97b436da4c33663581d394f4ee0a5977fc38c2f4/vendor/llvm.tar.gz"
+                ],
+                "libcxxabi/include": [
+                  "https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi.git/+archive/92767730c5f8350fc53f5b3de5c3c02d00bbab8c/include.tar.gz"
+                ],
+                "libcxxabi/src": [
+                  "https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi.git/+archive/92767730c5f8350fc53f5b3de5c3c02d00bbab8c/src.tar.gz"
+                ],
+                "libc/hdr": [
+                  "https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libc.git/+archive/48db747a8d08f69b9f5330a5f49f21e2c491daae/hdr.tar.gz"
+                ],
+                "libc/include": [
+                  "https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libc.git/+archive/48db747a8d08f69b9f5330a5f49f21e2c491daae/include.tar.gz"
+                ],
+                "libc/shared": [
+                  "https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libc.git/+archive/48db747a8d08f69b9f5330a5f49f21e2c491daae/shared.tar.gz"
+                ],
+                "libc/src/__support": [
+                  "https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libc.git/+archive/48db747a8d08f69b9f5330a5f49f21e2c491daae/src/__support.tar.gz"
+                ]
+              },
+              "sha256": {
+                "libcxx/include": "c354776cb29fbdc4dbb2084fdb97bd4dcb47c0e5eabd56560a041ac9164b038e",
+                "libcxx/src": "51016fc72c91194c6d90b1eeb074417d7d548efac7e73d2c032109fd1ee8c1f7",
+                "libcxx/vendor/llvm": "98207a19093483d240a882964c08ae321ce4a1933c50e181d38118e010c965d9",
+                "libcxxabi/include": "5228218bf8e9c13a67f2c517f67a8ab35e1c049df1f076b3b15db3fb50a3c778",
+                "libcxxabi/src": "c59b09efc540b6b8755657d487744d6d99f3feaf86bcaf1fa4d663356c850b78",
+                "libc/hdr": "d5f181c492d65de0de39cceb1a3ea95e8c211e432dc2af18431fdaf19c8bfcf1",
+                "libc/include": "48d94ffb35ffea0ad1927ac7b620c500e4bd1a681a9a4c9ad389fc14993caeab",
+                "libc/shared": "f52d81edefe4231da6696bd63cdf51f80cd17b11f7a4ecb4df009474a47b7e26",
+                "libc/src/__support": "d49fe183a5bc5e61c9c43dab34650d7be362a5380d40d32e2df7cc586ef5d9e1"
+              },
+              "toolchains_chromium_repo": "toolchains_chromium+"
+            }
+          },
           "chromium_toolchain": {
             "repoRuleId": "@@toolchains_chromium+//:chromium_toolchain.bzl%chromium_toolchain",
             "attributes": {
@@ -404,6 +450,7 @@
                 "linux-x86_64"
               ],
               "llvm_version": "23",
+              "libcxx_repo": "toolchains_chromium++chromium+chromium_toolchain_libcxx",
               "toolchains_chromium_repo": "toolchains_chromium+"
             }
           }

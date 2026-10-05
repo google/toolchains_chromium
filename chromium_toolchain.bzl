@@ -39,6 +39,7 @@ def _chromium_toolchain_impl(rctx):
         for k, v in rctx.attr.sysroots.items()
     ])
     targets_str = ", ".join(['"{}"'.format(t) for t in rctx.attr.targets])
+    libcxx_label = "@@" + rctx.attr.libcxx_repo if rctx.attr.libcxx_repo else ""
 
     rctx.file("BUILD.bazel", """\
 load("@@{module}//:chromium_toolchain_targets.bzl", "chromium_toolchain_targets")
@@ -48,6 +49,7 @@ chromium_toolchain_targets(
     sysroots = {{{sysroots}}},
     targets = [{targets}],
     llvm_version = "{llvm_version}",
+    libcxx_label = "{libcxx_label}",
 )
 """.format(
         module = rctx.attr.toolchains_chromium_repo,
@@ -55,6 +57,7 @@ chromium_toolchain_targets(
         sysroots = sysroots_str,
         targets = targets_str,
         llvm_version = rctx.attr.llvm_version,
+        libcxx_label = libcxx_label,
     ))
 
 chromium_toolchain = repository_rule(
@@ -64,6 +67,10 @@ chromium_toolchain = repository_rule(
         "sysroots": attr.string_dict(mandatory = True, doc = "Map of target key to canonical sysroot repo name."),
         "targets": attr.string_list(mandatory = True, doc = "Target platform keys (e.g. linux-x86_64)."),
         "llvm_version": attr.string(mandatory = True),
+        "libcxx_repo": attr.string(
+            default = "",
+            doc = "Canonical repo name of the libc++ sources (see libcxx/libcxx_sources.bzl); empty to use the sysroot's libstdc++.",
+        ),
         "toolchains_chromium_repo": attr.string(mandatory = True, doc = "Canonical repo name of toolchains_chromium."),
     },
 )
