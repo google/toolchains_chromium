@@ -12,18 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <stdexcept>
-#include <string>
+// Violates a standard library precondition (out-of-bounds vector access).
+// libc++ hardening, enabled by default, must abort with a message instead
+// of silently reading past the end.
 
-// Allocates and throws, so the compiled part of the C++ runtime (operator
-// new, string growth, exception handling) is linked into this shared
-// library; see visibility_test.cc.
-extern "C" int shared_func() {
-    std::string s(100, 'x');
-    try {
-        throw std::runtime_error(s);
-    } catch (const std::exception& e) {
-        s = e.what();
-    }
-    return static_cast<int>(s.size()) - 58;
+#include <cstdio>
+#include <vector>
+
+int main(int argc, char**) {
+    std::vector<int> v(3);
+    // The index depends on argc so the access cannot be folded away.
+    int value = v[argc + 5];
+    std::printf("read %d past the end without aborting\n", value);
+    return 0;
 }

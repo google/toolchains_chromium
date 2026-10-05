@@ -33,7 +33,14 @@ chromium = use_extension(
     dev_dependency = True,
 )
 chromium.toolchain()
-use_repo(chromium, "chromium_toolchain")
+
+# The other stdlib. Not registered: //:libstdcxx_test selects it through
+# --extra_toolchains (see toolchain_test.bzl).
+chromium.toolchain(
+    name = "chromium_toolchain_libstdcxx",
+    stdlib = "libstdc++",
+)
+use_repo(chromium, "chromium_toolchain", "chromium_toolchain_libstdcxx")
 
 register_toolchains(
     "@chromium_toolchain//:all",

@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <stdexcept>
-#include <string>
+// A target opts out of the default hardening mode with its own
+// -D_LIBCPP_HARDENING_MODE. This must compile cleanly under -Werror (no
+// macro redefinition) and link against code built in the default mode
+// (the :add library): libc++'s ABI tags keep the two modes ODR-safe.
 
-// Allocates and throws, so the compiled part of the C++ runtime (operator
-// new, string growth, exception handling) is linked into this shared
-// library; see visibility_test.cc.
-extern "C" int shared_func() {
-    std::string s(100, 'x');
-    try {
-        throw std::runtime_error(s);
-    } catch (const std::exception& e) {
-        s = e.what();
-    }
-    return static_cast<int>(s.size()) - 58;
+#include <vector>
+
+#include "add.h"
+
+static_assert(_LIBCPP_HARDENING_MODE == _LIBCPP_HARDENING_MODE_NONE);
+
+int main() {
+    std::vector<int> v = {1, 2};
+    return add(v[0], v[1]) == 3 ? 0 : 1;
 }
