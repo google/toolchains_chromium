@@ -15,15 +15,68 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@rules_shell//shell:sh_test.bzl", "sh_test")
+load(":toolchain_test.bzl", "toolchain_test")
 
 cc_test(
     name = "hello",
     srcs = ["hello.cc"],
 )
 
+# libc++ built from source, in dynamic (libc++.so) and static (libc++.a)
+# linking mode.
+cc_test(
+    name = "libcxx_smoke",
+    srcs = ["libcxx_smoke.cc"],
+    copts = ["-std=c++23"],
+)
+
+cc_test(
+    name = "libcxx_smoke_linkstatic",
+    srcs = ["libcxx_smoke.cc"],
+    copts = ["-std=c++23"],
+    linkstatic = True,
+)
+
+# libc++ hardening is on by default and aborts with a message.
+cc_binary(
+    name = "hardening_check",
+    srcs = ["hardening_check.cc"],
+)
+
+sh_test(
+    name = "hardening_test",
+    srcs = ["hardening_test.sh"],
+    args = ["$(location :hardening_check)"],
+    data = [":hardening_check"],
+)
+
+# A target can pick its own hardening mode.
+cc_test(
+    name = "hardening_mode_none",
+    srcs = ["hardening_mode_none.cc"],
+    copts = ["-Werror"],
+    local_defines = ["_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_NONE"],
+    deps = [":add"],
+)
+
 cc_test(
     name = "c_test",
     srcs = ["c_test.c"],
+)
+
+# The sysroot's libstdc++ instead of libc++ (chromium.toolchain(stdlib =
+# "libstdc++") in MODULE.bazel). manual: the check only compiles with that
+# toolchain, which the test's transition selects.
+cc_binary(
+    name = "libstdcxx_check",
+    srcs = ["libstdcxx_check.cc"],
+    tags = ["manual"],
+)
+
+toolchain_test(
+    name = "libstdcxx_test",
+    binary = ":libstdcxx_check",
+    extra_toolchains = ["@chromium_toolchain_libstdcxx//:all"],
 )
 
 # Exercises llvm-ar (cpp_link_static_library action) via ar_files.
@@ -58,6 +111,15 @@ cc_binary(
     name = "shared_lib.so",
     srcs = ["shared_lib.cc"],
     linkshared = True,
+)
+
+# The static-mode shared library above must not export its copy of libc++.
+cc_test(
+    name = "visibility_test",
+    srcs = ["visibility_test.cc"],
+    args = ["$(location :shared_lib.so)"],
+    data = [":shared_lib.so"],
+    linkopts = ["-ldl"],
 )
 
 cc_library(
