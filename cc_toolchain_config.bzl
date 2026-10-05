@@ -64,6 +64,62 @@ def _impl(ctx):
     # Used for coverage flags that are meaningless for assembly.
     cc_compile = ACTION_NAME_GROUPS.all_cpp_compile_actions + [ACTION_NAMES.c_compile]
 
+    # C++ standard library. With libc++ the headers come from the sources repo
+    # (-nostdinc++ hides the sysroot's libstdc++ headers) and the library from
+    # cc_toolchain's static_runtime_lib / dynamic_runtime_lib, which rules_cc
+    # appends to every link when static_link_cpp_runtimes is enabled
+    # (-nostdlib++ keeps the driver from adding -lstdc++ on its own). Either
+    # library needs -lpthread for std::thread: the sysroot's glibc (2.31)
+    # still keeps pthread_create in libpthread.
+    libcxx = ctx.attr.stdlib == "libc++"
+    if libcxx:
+        stdlib_compile_flag_sets = [flag_set(
+            actions = ACTION_NAME_GROUPS.all_cpp_compile_actions,
+            flag_groups = [flag_group(flags = ["-nostdinc++"] + [
+                flag
+                for directory in ctx.attr.libcxx_include_directories
+                for flag in ["-isystem", directory]
+            ])],
+        )]
+        stdlib_link_flags = ["-nostdlib++", "-lm", "-lpthread"]
+        runtime_features = [
+            feature(name = "static_link_cpp_runtimes", enabled = True),
+            # Override of the legacy `static_libgcc` feature, which adds
+            # -static-libgcc whenever static_link_cpp_runtimes is on: the
+            # sysroot has no libgcc_eh.a, and libgcc_s stays the unwinder.
+            feature(name = "static_libgcc"),
+            # Override of the legacy `runtime_library_search_directories`
+            # feature, which under static_link_cpp_runtimes emits $EXEC_ORIGIN
+            # rpaths for tests (expecting a linker wrapper to rewrite them).
+            feature(
+                name = "runtime_library_search_directories",
+                flag_sets = [flag_set(
+                    actions = [
+                        ACTION_NAMES.cpp_link_dynamic_library,
+                        ACTION_NAMES.cpp_link_executable,
+                        ACTION_NAMES.cpp_link_nodeps_dynamic_library,
+                        ACTION_NAMES.lto_index_for_dynamic_library,
+                        ACTION_NAMES.lto_index_for_executable,
+                        ACTION_NAMES.lto_index_for_nodeps_dynamic_library,
+                    ],
+                    flag_groups = [flag_group(
+                        iterate_over = "runtime_library_search_directories",
+                        flag_groups = [flag_group(flags = [
+                            "-Xlinker",
+                            "-rpath",
+                            "-Xlinker",
+                            "$ORIGIN/%{runtime_library_search_directories}",
+                        ])],
+                        expand_if_available = "runtime_library_search_directories",
+                    )],
+                )],
+            ),
+        ]
+    else:
+        stdlib_compile_flag_sets = []
+        stdlib_link_flags = ["-lstdc++", "-lm", "-lpthread"]
+        runtime_features = []
+
     # Clang finds its resource dir (builtins like stddef.h, sanitizer
     # runtimes) relative to the binary. Since we symlink the binary into
     # a different repo, we must tell Clang explicitly where its resources
@@ -141,7 +197,7 @@ def _impl(ctx):
                     ])],
                     with_features = [with_feature_set(features = ["opt"])],
                 ),
-            ],
+            ] + stdlib_compile_flag_sets,
         ),
         feature(
             name = "default_link_flags",
@@ -156,9 +212,7 @@ def _impl(ctx):
                         "-Wl,--build-id=md5",
                         "-Wl,--hash-style=gnu",
                         "-Wl,-z,relro,-z,now",
-                        "-lstdc++",
-                        "-lm",
-                    ])],
+                    ] + stdlib_link_flags)],
                 ),
                 flag_set(
                     actions = all_link,
@@ -172,6 +226,7 @@ def _impl(ctx):
         feature(name = "fastbuild"),
         feature(name = "supports_pic", enabled = True),
         feature(name = "supports_dynamic_linker", enabled = True),
+    ] + runtime_features + [
         feature(name = "coverage"),
         feature(
             name = "llvm_coverage_map_format",
@@ -267,6 +322,15 @@ chromium_cc_toolchain_config = rule(
         "sysroot_path": attr.string(default = ""),
         "resource_dir": attr.string(default = "", doc = "Exec-root-relative path to Clang's resource dir (lib/clang/<ver>)."),
         "cxx_builtin_include_directories": attr.string_list(default = []),
+        "stdlib": attr.string(
+            default = "libstdc++",
+            values = ["libc++", "libstdc++"],
+            doc = "C++ standard library: libc++ from cc_toolchain's runtime libs, or the sysroot's libstdc++.",
+        ),
+        "libcxx_include_directories": attr.string_list(
+            default = [],
+            doc = "Exec-root-relative libc++ (and libc++abi) include directories, in search order.",
+        ),
     },
     provides = [CcToolchainConfigInfo],
 )
